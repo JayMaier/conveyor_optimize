@@ -1,0 +1,43 @@
+def problem_constructor(num_materials = 3):
+    '''
+    x order: (assuming 4 materials)
+    initial state (4)
+    stage 1 (4)
+    stage 2 (4)
+    stage 3/out material 4 (4) 
+    out material 1
+    out material 2
+    out material 3
+    belt speed
+    effort mat 1
+    effort mat 2
+    effort mat 3
+    '''
+       
+    
+    
+    x = np.zeros(((num_materials ** 2) + 2*num_materials - 1))
+    u = np.zeros((num_materials))
+    
+    A = np.zeros((x.shape[0], x.shape[0]))
+    B = np.zeros((x.shape[0], u.shape[0]))
+    Q = np.zeros((x.shape[0], x.shape[0]))
+    R = np.zeros((u.shape[0], u.shape[0]))
+    
+    A[-1, -1] = 1 # effort mat 3 no state trans
+    A[-2, -2] = 1 # effort mat 2 no state trans
+    A[-3, -3] = 1 # effort mat 1 no state trans
+    A[-4, -4] = 1 # belt speed no state trans
+    
+    for i in range(num_materials-1): # set up A matrix to move material along to next stage
+        row_start = (i+1)*num_materials
+        col_start = i*num_materials
+        for j in range(num_materials):
+            Ar = row_start+j
+            Ac = col_start+j
+            A[Ar, Ac] = 1
+    for i in range(num_materials-1):
+        r_start = (i+1)*num_materials
+        B[r_start, i] = -10
+    
+    return A, B, x, u
