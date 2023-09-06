@@ -75,7 +75,7 @@ class Experiment():
         total_score = 0
         
         # Do optimized run
-        for i in range(self.run_length):
+        for i in tqdm(range(self.run_length), position = 0):
             
             # Step sim fwd one time step
             x[:C.num_materials] = infeed[i]* self.infeed_ratio
@@ -136,4 +136,4 @@ class Experiment():
 experiment = Experiment()
 # with Pool() as pool:
 #     pool.map(experiment, range(0, experiment.num_runs))
-process_map(experiment, range(0, experiment.num_runs))
+process_map(experiment, range(0, experiment.num_runs), position=1)
