@@ -13,15 +13,15 @@ class Experiment():
         
         # set experiment params here
 
-        self.num_runs = 30
-        self.run_length = 5
-        self.exp_name = 'multiproc_testing'
+        self.num_runs = 10
+        self.run_length = 40
+        self.exp_name = '1_hr_20x_real_rand'
         self.exp_dir = 'experiments/'
         self.infeed_ratio = 0.25
-        self.seed = 0
+        # self.seed = 0
+        C = controller.controller()
 
-
-        np.random.seed(self.seed)
+        # np.random.seed(self.seed)
 
         # other params that probably shouldnt be changed
         self.num_hits = 10
@@ -35,38 +35,41 @@ class Experiment():
             shutil.rmtree(self.path)
         os.mkdir(self.path)
 
-        param_list = ['num_runs', 'run_length', 'infeed_ratio', 'num_hits', 'pdf_std', 'hit_scale', 'seed']
-        val_list = [self.num_runs, self.run_length, self.infeed_ratio, self.num_hits, self.pdf_std, self.hit_scale, self.seed]
+        param_list = ['num_runs', 'run_length', 'infeed_ratio', 'num_hits', 'pdf_std', 'hit_scale']
+        val_list = [self.num_runs, self.run_length, self.infeed_ratio, self.num_hits, self.pdf_std, self.hit_scale]
 
         lst = list(zip(param_list, val_list))
         pd.DataFrame(lst).to_csv(self.path+'/settings.csv')
         
+        # generate new random infeed
+        
+        self.infeed = np.ones((self.num_runs, self.run_length, C.num_materials))
+        x = np.arange(0, self.run_length, 1)
+        
+        # hits_1 = np.random.randint(0, self.run_length, self.num_hits)
+        # hits_2 = np.random.randint(0, self.run_length, self.num_hits)
+        # hits_3 = np.random.randint(0, self.run_length, self.num_hits)
+        for run_num in range(self.num_runs):
+            infeed_run = np.ones((self.run_length, C.num_materials))
+            hit_inds = np.random.randint(0, self.run_length, (self.num_hits, C.num_materials))
+            for hit in range(self.num_hits):
+                for i in range(C.num_materials):
+                    infeed_run[:, i] += scipy.stats.norm.pdf(x, hit_inds[hit, i], self.pdf_std)*self.hit_scale
+            
+            infeed_norm = np.sum(infeed_run, axis=1, keepdims=True)
+            infeed_run = infeed_run/infeed_norm
+            self.infeed[run_num] = infeed_run
+        
         
     def __call__(self, idx):
-        print(idx)
+        
         # experiment happening here
 
         # instantiate new controller
         
         C = controller.controller()
         
-        # generate new random infeed
-        
-        infeed = np.ones((self.run_length, C.num_materials))
-        x = np.arange(0, self.run_length, 1)
-        
-        # hits_1 = np.random.randint(0, self.run_length, self.num_hits)
-        # hits_2 = np.random.randint(0, self.run_length, self.num_hits)
-        # hits_3 = np.random.randint(0, self.run_length, self.num_hits)
-        
-        hit_inds = np.random.randint(0, self.run_length, (self.num_hits, C.num_materials))
-        for hit in range(self.num_hits):
-            for i in range(C.num_materials):
-                infeed[:, i] += scipy.stats.norm.pdf(x, hit_inds[hit, i], self.pdf_std)*self.hit_scale
-
-        infeed_norm = np.sum(infeed, axis=1, keepdims=True)
-        infeed = infeed/infeed_norm
-
+        infeed = self.infeed[idx]
         # Init system
         x = np.zeros(C.state_dim)
         x[-1] = 1
