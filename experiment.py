@@ -14,8 +14,8 @@ class Experiment():
         # set experiment params here
 
         self.num_runs = 10
-        self.run_length = 40
-        self.exp_name = '1_hr_20x_real_rand'
+        self.run_length = 500
+        self.exp_name = '10x_500'
         self.exp_dir = 'experiments/'
         self.infeed_ratio = 0.25
         # self.seed = 0
