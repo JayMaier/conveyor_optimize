@@ -13,19 +13,20 @@ class Experiment():
         
         # set experiment params here
 
-        self.num_runs = 10
-        self.run_length = 500
-        self.exp_name = '10x_500'
+        self.num_runs = 25
+        self.run_length = 46000
+        self.exp_name = '25x_hour_new_infeed'
         self.exp_dir = 'experiments/'
-        self.infeed_ratio = 0.25
+        self.infeed_ratio = 0.27
         # self.seed = 0
         C = controller.controller()
+        self.tries = 100000
 
         # np.random.seed(self.seed)
 
         # other params that probably shouldnt be changed
         self.num_hits = 10
-        self.pdf_std = self.run_length/self.num_hits
+        self.pdf_std = 0.5*self.run_length/self.num_hits
         self.hit_scale = 10000
 
         # Set up logging dir
@@ -45,21 +46,27 @@ class Experiment():
         
         self.infeed = np.ones((self.num_runs, self.run_length, C.num_materials))
         x = np.arange(0, self.run_length, 1)
-        
-        # hits_1 = np.random.randint(0, self.run_length, self.num_hits)
-        # hits_2 = np.random.randint(0, self.run_length, self.num_hits)
-        # hits_3 = np.random.randint(0, self.run_length, self.num_hits)
-        for run_num in range(self.num_runs):
-            infeed_run = np.ones((self.run_length, C.num_materials))
-            hit_inds = np.random.randint(0, self.run_length, (self.num_hits, C.num_materials))
-            for hit in range(self.num_hits):
-                for i in range(C.num_materials):
-                    infeed_run[:, i] += scipy.stats.norm.pdf(x, hit_inds[hit, i], self.pdf_std)*self.hit_scale
             
-            infeed_norm = np.sum(infeed_run, axis=1, keepdims=True)
-            infeed_run = infeed_run/infeed_norm
-            self.infeed[run_num] = infeed_run
-        
+        for run_num in range(self.num_runs):
+            for trie in range(self.tries):
+                infeed_run = np.ones((self.run_length, C.num_materials))
+                hit_inds = np.random.randint(0, self.run_length, (self.num_hits, C.num_materials))
+                for hit in range(self.num_hits):
+                    for i in range(C.num_materials):
+                        infeed_run[:, i] += scipy.stats.norm.pdf(x, hit_inds[hit, i], self.pdf_std)*self.hit_scale
+                
+                infeed_norm = np.sum(infeed_run, axis=1, keepdims=True)
+                infeed_run = infeed_run/infeed_norm
+                self.infeed[run_num] = infeed_run
+                q90_10_0 = np.percentile(self.infeed[run_num, :, 0], 90)/np.percentile(self.infeed[run_num, :, 0], 10)
+                q90_10_1 = np.percentile(self.infeed[run_num, :, 1], 90)/np.percentile(self.infeed[run_num, :, 1], 10)
+                q90_10_2 = np.percentile(self.infeed[run_num, :, 2], 90)/np.percentile(self.infeed[run_num, :, 2], 10)
+                q_s = np.array([q90_10_0, q90_10_1, q90_10_2])
+                if np.all(q_s <= 4.58) and np.all(q_s >= 3.39):
+                    print('got it! ', run_num)
+                    break
+            np.savetxt(self.path + '/infeed' + str(run_num) + '.csv', self.infeed[run_num], delimiter = ', ')         
+                    
         
     def __call__(self, idx):
         
