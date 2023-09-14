@@ -17,7 +17,7 @@ class Experiment():
         self.run_length = 500
         self.exp_name = '4_mats'
         self.exp_dir = 'experiments/'
-        C = controller.controller()
+        C = controller.controller(mats = 5)
         self.infeed_ratio = 0.14*(C.num_materials - 1)
         # self.seed = 0
        
@@ -47,7 +47,7 @@ class Experiment():
         
         self.infeed = np.ones((self.num_runs, self.run_length, C.num_materials))
         x = np.arange(0, self.run_length, 1)
-        not_quant = False
+        not_quant = True
         for run_num in range(self.num_runs):
             for trie in range(self.tries):
                 infeed_run = np.ones((self.run_length, C.num_materials))
@@ -66,6 +66,7 @@ class Experiment():
                 # q90_10_1 = np.percentile(self.infeed[run_num, :, 1], 90)/np.percentile(self.infeed[run_num, :, 1], 10)
                 # q90_10_2 = np.percentile(self.infeed[run_num, :, 2], 90)/np.percentile(self.infeed[run_num, :, 2], 10)
                 qs = np.array(q_s)
+                
                 if (np.all(qs <= 4.58) and np.all(qs >= 3.39)) or not_quant:
                     print('got it! ', run_num)
                     break
@@ -78,7 +79,7 @@ class Experiment():
 
         # instantiate new controller
         
-        C = controller.controller()
+        C = controller.controller(mats=5)
         
         infeed = self.infeed[idx]
         # Init system

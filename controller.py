@@ -63,6 +63,32 @@ class controller():
             
             self.item_2_start_id = 15
             self.item_2_end_id = 20
+            
+        if mats == 5:
+            self.horizon = 20
+        
+            self.num_materials = 5
+            self.belt_length = 52
+            self.volume_length = 2
+            self.speed_control_ratio = 0.2
+            self.num_speeds = 4
+            
+            self.speed_min = 0.7
+            self.speed_max = 1.33
+            self.item_0_start_id = 5
+            self.item_0_end_id = 10
+            self.picks_per_sec = 1.5
+            self.update_rate = 12
+            self.prices = np.array([0.306, 0.2, 0.124, 0.062, 0.01875])
+            # self.prices -= 0.1
+            self.item_1_start_id = 10
+            self.item_1_end_id = 15
+            
+            self.item_2_start_id = 15
+            self.item_2_end_id = 20
+            
+            self.item_3_start_id = 20
+            self.item_3_end_id = 25
         
         self.num_volumes = int(self.belt_length/self.volume_length)
         self.state_dim = self.num_materials * self.num_volumes + 1
@@ -108,6 +134,14 @@ class controller():
                 picks_2.append(self.item_2_start_id + i)
                 
             self.picks.append(picks_2)
+            
+        if mats >= 5:
+            pick_width_3 = self.item_3_end_id - self.item_3_start_id
+            picks_3 = []
+            for i in range(pick_width_3):
+                picks_3.append(self.item_3_start_id + i)
+                
+            self.picks.append(picks_3)
         
         x_0 = np.zeros((self.state_dim))
         x_0[-1] = 1
