@@ -15,9 +15,10 @@ class Experiment():
 
         self.num_runs = 10
         self.run_length = 500
-        self.exp_name = '4_mats'
+        self.num_mats = 3
+        self.exp_name = '3_mats'
         self.exp_dir = 'experiments/'
-        C = controller.controller(mats = 5)
+        C = controller.controller(mats = self.num_mats)
         self.infeed_ratio = 0.14*(C.num_materials - 1)
         # self.seed = 0
        
@@ -47,7 +48,7 @@ class Experiment():
         
         self.infeed = np.ones((self.num_runs, self.run_length, C.num_materials))
         x = np.arange(0, self.run_length, 1)
-        not_quant = True
+        not_quant = False
         for run_num in range(self.num_runs):
             for trie in range(self.tries):
                 infeed_run = np.ones((self.run_length, C.num_materials))
@@ -79,7 +80,7 @@ class Experiment():
 
         # instantiate new controller
         
-        C = controller.controller(mats=5)
+        C = controller.controller(mats=self.num_mats)
         
         infeed = self.infeed[idx]
         # Init system
@@ -107,7 +108,6 @@ class Experiment():
             speed_hist.append(x[-1])
             pos = np.zeros((C.num_materials))
             pos[:-1] = C.master_sort_mat.T @ x
-            # print(x[(C.num_volumes-1)*C.num_materials : C.num_volumes*C.num_materials])
             pos[-1] = np.sum(x[(C.num_volumes-1)*C.num_materials : C.num_volumes*C.num_materials])
             sort_hist.append(pos)
             # Set up for next step
@@ -131,7 +131,7 @@ class Experiment():
         x = np.zeros(C.state_dim)
         x[-1] = 1
         const_traj = np.ones((C.horizon)) * mean_speed
-        const_total_score_hist, const_u_hist, const_speed_hist = [], [], []
+        const_total_score_hist, const_u_hist, const_speed_hist, const_sort_hist = [], [], [], []
         total_score = 0
             
         # Do constant speed run
@@ -142,13 +142,20 @@ class Experiment():
             
             x_new = C.one_step_fwd(x, const_traj)
             step_score = C.cash_aht(x_new)
+            pos = np.zeros((C.num_materials))
+            pos[:-1] = C.master_sort_mat.T @ x
+            pos[-1] = np.sum(x[(C.num_volumes-1)*C.num_materials : C.num_volumes*C.num_materials])
+            const_sort_hist.append(pos)
             
             # Logging
             total_score += step_score
             const_total_score_hist.append(total_score)
             const_u_hist.append(const_traj[0])
             const_speed_hist.append(x[-1])
-            
+            sort_hist_ar = np.array(sort_hist)
+        
+            sort_df = pd.DataFrame(sort_hist_ar)
+            sort_df.to_csv(self.path+'/const_run_sort_' + str(idx) + '.csv')
             # Set up for next step
             x = x_new
         
@@ -171,5 +178,5 @@ class Experiment():
 experiment = Experiment()
 # with Pool() as pool:
 #     pool.map(experiment, range(0, experiment.num_runs))
-workers = 10
-process_map(experiment, range(0, experiment.num_runs),max_workers=workers, position=0)
+
+process_map(experiment, range(0, experiment.num_runs), position=0)
