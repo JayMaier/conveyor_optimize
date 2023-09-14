@@ -2,15 +2,17 @@ import numpy as np
 
 
 class controller():
-    def __init__(self):
+    def __init__(self, mats= 4):
         # init things here
-        self.horizon = 30
+        self.horizon = 20
         
         self.num_materials = 3
         self.belt_length = 62
         self.volume_length = 2
         self.speed_control_ratio = 0.2
         self.num_speeds = 4
+        self.prices = np.array([0.306, 0.124, 0.01875]) #units here are cents/unit.  PET: 12.25 c/lb, PP: 5.5 c/lb, 3-7 bale 0.75 c/lb 40 pc/lb
+        # self.prices = np.array([1, 0.001, 0.00001875]) #deweight things to make it more clear what is happening
         
         self.speed_min = 0.7
         self.speed_max = 1.33
@@ -20,6 +22,48 @@ class controller():
         self.item_1_end_id = 30
         self.picks_per_sec = 1.5
         self.update_rate = 12
+        
+        if mats == 2:
+            self.horizon = 20
+        
+            self.num_materials = 2
+            self.belt_length = 32
+            self.volume_length = 2
+            self.speed_control_ratio = 0.2
+            self.num_speeds = 4
+            
+            self.speed_min = 0.7
+            self.speed_max = 1.33
+            self.item_0_start_id = 10
+            self.item_0_end_id = 15
+            self.picks_per_sec = 1.5
+            self.update_rate = 12
+            self.prices = np.array([0.306, 0.01875])
+            # self.prices -= 0.1
+            
+        if mats == 4:
+            self.horizon = 20
+        
+            self.num_materials = 4
+            self.belt_length = 42
+            self.volume_length = 2
+            self.speed_control_ratio = 0.2
+            self.num_speeds = 4
+            
+            self.speed_min = 0.7
+            self.speed_max = 1.33
+            self.item_0_start_id = 5
+            self.item_0_end_id = 10
+            self.picks_per_sec = 1.5
+            self.update_rate = 12
+            self.prices = np.array([0.306, 0.124, 0.062, 0.01875])
+            # self.prices -= 0.1
+            self.item_1_start_id = 10
+            self.item_1_end_id = 15
+            
+            self.item_2_start_id = 15
+            self.item_2_end_id = 20
+        
         self.num_volumes = int(self.belt_length/self.volume_length)
         self.state_dim = self.num_materials * self.num_volumes + 1
         
@@ -28,8 +72,6 @@ class controller():
         self.armijo_backtrack = 0.5
         self.delta = 0.05
         self.learning_rate = 0.05
-        self.prices = np.array([0.306, 0.124, 0.01875]) #units here are cents/unit.  PET: 12.25 c/lb, PP: 5.5 c/lb, 3-7 bale 0.75 c/lb 40 pc/lb
-        # self.prices = np.array([1, 0.001, 0.00001875]) #deweight things to make it more clear what is happening
         
         
         self.A = self.generate_A_matrix()
@@ -51,12 +93,21 @@ class controller():
 
         self.picks.append(picks_0)
         
-        pick_width_1 = self.item_1_end_id - self.item_1_start_id
-        picks_1 = []
-        for i in range(pick_width_1):
-            picks_1.append(self.item_1_start_id + i)
+        if mats >= 3:
+            pick_width_1 = self.item_1_end_id - self.item_1_start_id
+            picks_1 = []
+            for i in range(pick_width_1):
+                picks_1.append(self.item_1_start_id + i)
+                
+            self.picks.append(picks_1)
             
-        self.picks.append(picks_1)
+        if mats >= 4:
+            pick_width_2 = self.item_2_end_id - self.item_2_start_id
+            picks_2 = []
+            for i in range(pick_width_2):
+                picks_2.append(self.item_2_start_id + i)
+                
+            self.picks.append(picks_2)
         
         x_0 = np.zeros((self.state_dim))
         x_0[-1] = 1
@@ -241,13 +292,15 @@ class controller():
         
         missed_opportunity_vec = (self.master_sort_mat-sort_mat) @ (self.prices[-1] - self.prices[:-1])
         missed_opportunity_val = missed_opportunity_vec @ x
+        
         if eval:
             missed_opportunity_val = 0
 
+        
         if verbose:
             print('\n---------------------------------------\npositive sort val: ', positive_sort_val)
-            print('potisive sort price vec: ', positive_sort_price_vec)
-            print('x, ', x)
+            # print('potisive sort price vec: ', positive_sort_price_vec)
+            print('x, ', x[-1])
             print('negative sort val: ', negative_sort_val)
             
             print('missed opportunity val: ', missed_opportunity_val)
