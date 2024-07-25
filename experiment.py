@@ -15,11 +15,11 @@ class Experiment():
 
         self.num_runs = 10
         self.run_length = 500
-        self.num_mats = 3
-        self.exp_name = '3_mats'
+        self.num_mats = 2
+        self.exp_name = '2_mats_loc'
         self.exp_dir = 'experiments/'
         C = controller.controller(mats = self.num_mats)
-        self.infeed_ratio = 0.14*(C.num_materials - 1)
+        self.infeed_ratio = 0.18*(C.num_materials - 1)
         # self.seed = 0
        
         self.tries = 100000
@@ -27,7 +27,7 @@ class Experiment():
         # np.random.seed(self.seed)
 
         # other params that probably shouldnt be changed
-        self.num_hits = 2
+        self.num_hits = 5
         self.pdf_std = 0.5*self.run_length/self.num_hits
         self.hit_scale = 10000
 
@@ -152,10 +152,10 @@ class Experiment():
             const_total_score_hist.append(total_score)
             const_u_hist.append(const_traj[0])
             const_speed_hist.append(x[-1])
-            sort_hist_ar = np.array(sort_hist)
+            const_sort_hist_ar = np.array(const_sort_hist)
         
-            sort_df = pd.DataFrame(sort_hist_ar)
-            sort_df.to_csv(self.path+'/const_run_sort_' + str(idx) + '.csv')
+            const_sort_df = pd.DataFrame(const_sort_hist_ar)
+            const_sort_df.to_csv(self.path+'/const_run_sort_' + str(idx) + '.csv')
             # Set up for next step
             x = x_new
         

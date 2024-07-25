@@ -1,0 +1,7 @@
+,0,1
+0,num_runs,30.0
+1,run_length,1200.0
+2,infeed_ratio,0.28
+3,num_hits,2.0
+4,pdf_std,300.0
+5,hit_scale,10000.0
